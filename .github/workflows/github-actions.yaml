@@ -1,0 +1,20 @@
+name: Trivy
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  job_id:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Recuperer le code
+        uses: actions/checkout@v3
+
+      - name: Verifier avec Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'        # CORRECTION : Juste 'fs', pas de point ici
+          scan-ref: '.'          # Le point est ici (c'est le dossier courant)
+          exit-code: '1'         # Ça c'est bon : ça mettra ROUGE si faille trouvée
+          severity: 'CRITICAL,HIGH'
