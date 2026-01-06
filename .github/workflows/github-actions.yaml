@@ -1,4 +1,4 @@
-name: Trivy
+name: Trivy et Gitleaks
 on:
   push:
     branches:
@@ -8,13 +8,27 @@ jobs:
   job_id:
     runs-on: ubuntu-latest
     steps:
+      # 1. Récupération du code
       - name: Recuperer le code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # IMPORTANT pour Gitleaks : permet de scanner tout l'historique
 
+      # 2. Premier test : Trivy (Vulnérabilités)
       - name: Verifier avec Trivy
         uses: aquasecurity/trivy-action@master
         with:
-          scan-type: 'fs'        # CORRECTION : Juste 'fs', pas de point ici
-          scan-ref: '.'          # Le point est ici (c'est le dossier courant)
-          exit-code: '1'         # Ça c'est bon : ça mettra ROUGE si faille trouvée
+          scan-type: 'fs'
+          scan-ref: '.'
+          exit-code: '1'           # ROUGE si faille trouvée
           severity: 'CRITICAL,HIGH'
+
+      # 3. Deuxième test : Gitleaks (Secrets et mots de passe)
+      - name: Verifier avec Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4. Message de succès (Seulement si Trivy ET Gitleaks ont réussi)
+      - name: Resultat du scan
+        run: echo "✅ C'est bon ! Le code est sécurisé (Pas de failles, pas de secrets)."
